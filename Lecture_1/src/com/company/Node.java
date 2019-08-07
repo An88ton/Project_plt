@@ -1,8 +1,8 @@
 package com.company;
 
-public class Node {
+public class Node implements Failable {
 
-    private int number;
+    int number;
     private boolean isFailed;
 
     public Node(int number) {
