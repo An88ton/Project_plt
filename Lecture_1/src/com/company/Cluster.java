@@ -1,10 +1,11 @@
 package com.company;
 
 import java.util.ArrayList;
+import java.util.NoSuchElementException;
 
-public class Cluster implements Clusterable {
+public class Cluster {
 
-    ArrayList<Server> servers;
+    ArrayList<Optional<Server>> servers;
     int amountServers;
 
     public Cluster() {
@@ -16,38 +17,63 @@ public class Cluster implements Clusterable {
     }
 
     public void createServers(int amount){
-       // System.out.println("servers: " + amount);
+
+       System.out.println("servers: " + amount);
+
         for(int i = 0; i < amount; i++){
+            Optional <Server> server = new Optional<>(new Server(i));
          //   System.out.println("Server " + i);
-            servers.add(new Server(i));
+            if(server.isPresent()) {
+                server.getElement().createNodes();
+                while (server.getElement().getNodes().size() == 0){
+                    server.getElement().createNodes();
+                }
+                servers.add(server);
+            }
 
         }
     }
 
 
-    @Override
     public void sendMessage(){
-        int choosen = (int) (Math.random() * amountServers);
-        //System.out.println("Broken server: " + choosen);
-        int amountNode = servers.get(choosen).getAmountNode();
+        int choosen = (int) (Math.random() * servers.size());
 
+        int amountNode;
+
+        amountNode = servers.get(choosen).getElement().getAmountNode();
+        System.out.println("Broken server: " + choosen);
         for(int i =(int)(Math.random() * amountNode); i < amountNode; i++){
-            servers.get(choosen).getNodes().get(i).setFailed();
-            //System.out.println(" Node: " + i + " broken ");
+            if(servers.get(choosen).getElement().getNodes().get(i).isPresent()){
+            servers.get(choosen).getElement().getNodes().get(i).getElement().setFailed();}
+
+            System.out.println(" Node: " + i + " broken ");
         }
 
         for(int i = ++choosen; i < servers.size(); i++){
-            amountNode = servers.get(i).getAmountNode();
-            for(int j = 0; j < amountNode; j++){
-                servers.get(i).getNodes().get(j).setFailed();
-                //System.out.println("Server " + i + " Node: " + j +" broken: " + servers.get(i).getNodes().get(j).isFailed());
+            //amountNode = servers.get(i).getElement().getAmountNode();
+            try{
+                failNodes(i, servers.get(i).getElement().getAmountNode());
+                servers.get(i).getElement().setFailed();
+            }catch (NoSuchElementException e){
+                System.out.println("  Server № " + i + "doesn't exist");
             }
         }
     }
+    public void failNodes(int numServer, int amountNode){
 
-    @Override
+        for(int i = 0; i < amountNode; i++){
+            try {
+                servers.get(numServer).getElement().getNodes().get(i).getElement().setFailed();
+            }catch (NoSuchElementException e){
+                System.out.println("    Node № " + i + " on server № " + numServer + " doesn't exist");
+            }
+
+            System.out.println("Server " + numServer + " broken: " );
+        }
+    }
+
     public boolean isFailed(int numServer, int numNode){
-        return servers.get(numServer).getNodes().get(numNode).isFailed();
+        return servers.get(numServer).getElement().getNodes().get(numNode).getElement().isFailed();
 
     }
 
